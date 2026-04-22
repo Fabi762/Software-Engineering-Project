@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Project specific
+backend/uploads/
+*.xlsx
+~$*.xlsx
+
+# Node.js
+node_modules/
+dist/
+.npm/
+
+# OS specific
+.DS_Store
+Thumbs.db

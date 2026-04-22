@@ -52,6 +52,8 @@ MILESTONE 3 – KI-Lernzettel (Leon, Mario, Fabian)
   [ ] Karteikarten-Generierung – auf Milestone 4 verschoben
   [ ] Karteikarten-UI mit Flip-Animation – auf Milestone 4 verschoben
 
+--->Design? 
+
 
 3. AKTUELLER FUNKTIONSUMFANG
 ================================================================================
@@ -165,7 +167,7 @@ Was noch fehlt (Milestone 4):
 6. AUSBLICK – MILESTONE 4
 ================================================================================
 
-Fuer den finalen Milestone planen wir:
+Für den finalen Milestone planen wir:
 
   1. Karteikarten-Generierung (Backend)
      - Endpoint aktivieren und Prompt optimieren
