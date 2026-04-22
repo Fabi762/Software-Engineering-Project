@@ -1,5 +1,5 @@
 ## 📝 Worum geht es in diesem Pull Request?
-- Löst Issue: #______
+- Löst Issue: #______ ← **Pflicht** – kein Merge ohne verknüpftes Issue!
 - Kurze Beschreibung: (Was wurde gemacht?)
 
 ## 🚦 Checkliste vor dem Merge

@@ -1,0 +1,65 @@
+# Labels
+
+# ── Status ───────────────────────────────────────────────────────────────────
+- name: "status: offen"
+  color: "e4e669"
+  description: "Aufgabe ist angelegt, noch nicht begonnen."
+
+- name: "status: in bearbeitung"
+  color: "0075ca"
+  description: "Jemand arbeitet gerade daran."
+
+- name: "status: blockiert"
+  color: "d93f0b"
+  description: "Aufgabe kann nicht fortgeführt werden – Blocker dokumentieren."
+
+- name: "status: review"
+  color: "7057ff"
+  description: "Fertig implementiert, wartet auf Code-Review / Abnahme."
+
+- name: "status: fertig"
+  color: "0e8a16"
+  description: "Aufgabe ist vollständig abgeschlossen und gemergt."
+
+# ── Priorität ────────────────────────────────────────────────────────────────
+- name: "priorität: hoch"
+  color: "e11d48"
+  description: "Muss diese Woche erledigt sein."
+
+- name: "priorität: mittel"
+  color: "f97316"
+  description: "Sollte in diesem Sprint erledigt sein."
+
+- name: "priorität: niedrig"
+  color: "84cc16"
+  description: "Nice-to-have oder Backlog."
+
+# ── Typ ──────────────────────────────────────────────────────────────────────
+- name: "aufgabe"
+  color: "bfdbfe"
+  description: "Konkrete Arbeitsaufgabe (Task)."
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "Neues Feature / User Story."
+
+- name: "bug"
+  color: "d73a4a"
+  description: "Etwas funktioniert nicht wie erwartet."
+
+- name: "dokumentation"
+  color: "c5def5"
+  description: "Verbesserungen oder Ergänzungen an der Dokumentation."
+
+# ── Bereich ──────────────────────────────────────────────────────────────────
+- name: "bereich: frontend"
+  color: "fde68a"
+  description: "Betrifft das React-Frontend."
+
+- name: "bereich: backend"
+  color: "d1fae5"
+  description: "Betrifft den Python/FastAPI-Backend."
+
+- name: "bereich: infra"
+  color: "e9d5ff"
+  description: "Betrifft Infrastruktur, Docker, CI/CD."
