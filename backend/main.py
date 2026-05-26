@@ -141,9 +141,125 @@ async def delete_document(doc_id: str):
     return {"status": "deleted"}
 
 
-# --- Karteikarten-Generierung (geplant fuer Sprint 4) ---
-# @app.post("/api/generate/flashcards/{doc_id}")
-# async def generate_flashcards(doc_id: str): ...
+FLASHCARDS_SYSTEM_PROMPT = (
+    "Du bist ein Experte fuer das Erstellen von Lernkarteikarten. "
+    "Erstelle aus dem gegebenen Vorlesungsinhalt praegnante Frage-Antwort-Paare. "
+    "REGELN:\n"
+    "- Erstelle genau 10 Karteikarten.\n"
+    "- Jede Frage soll spezifisch und eindeutig sein.\n"
+    "- Die Antwort soll kurz und praegnant sein (2-4 Saetze).\n"
+    "- Konzentriere dich auf Kernbegriffe, Definitionen und wichtige Zusammenhaenge.\n"
+    "- Schreibe auf Deutsch.\n"
+    "- Antworte NUR mit validem JSON ohne Markdown-Bloecke.\n"
+    "Format: {\"flashcards\": [{\"question\": \"...\", \"answer\": \"...\"}]}"
+)
+
+QUIZ_SYSTEM_PROMPT = (
+    "Du bist ein Experte fuer das Erstellen von Multiple-Choice-Fragen. "
+    "Erstelle aus dem gegebenen Vorlesungsinhalt 5 Multiple-Choice-Fragen. "
+    "REGELN:\n"
+    "- Jede Frage hat genau 4 Antwortmoeglichkeiten (a, b, c, d).\n"
+    "- Genau eine Antwort ist korrekt.\n"
+    "- Die falschen Antworten sollen plausibel aber klar falsch sein.\n"
+    "- Schreibe auf Deutsch.\n"
+    "- Antworte NUR mit validem JSON ohne Markdown-Bloecke.\n"
+    "Format: {\"questions\": [{\"question\": \"...\", \"options\": [\"...\", \"...\", \"...\", \"...\"], \"correct\": 0, \"explanation\": \"...\"}]}"
+)
+
+
+async def _call_azure_openai(system_prompt: str, user_message: str) -> str:
+    url = (
+        f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/"
+        f"{AZURE_OPENAI_DEPLOYMENT}/chat/completions"
+        f"?api-version={AZURE_OPENAI_API_VERSION}"
+    )
+    payload = {
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ],
+        "temperature": 0.5,
+        "max_tokens": 2500,
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            url,
+            headers={"api-key": AZURE_OPENAI_API_KEY},
+            json=payload,
+            timeout=60.0,
+        )
+        response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
+
+
+@app.post("/api/generate/flashcards/{doc_id}")
+async def generate_flashcards(doc_id: str):
+    if not azure_openai_configured():
+        raise HTTPException(status_code=503, detail="Azure OpenAI nicht konfiguriert.")
+    if doc_id not in documents_store:
+        raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
+
+    content = documents_store[doc_id]["markdown"][:MAX_CONTENT_LENGTH]
+    try:
+        raw = await _call_azure_openai(
+            FLASHCARDS_SYSTEM_PROMPT,
+            "Erstelle 10 Karteikarten aus diesem Vorlesungsinhalt:\n\n" + content,
+        )
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = re.sub(r"^```[a-z]*\n?", "", raw)
+            raw = re.sub(r"\n?```$", "", raw)
+        data = json.loads(raw)
+        flashcards = data.get("flashcards", data) if isinstance(data, dict) else data
+        documents_store[doc_id]["flashcards"] = flashcards
+        return {"flashcards": flashcards}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Karteikarten-Generierung fehlgeschlagen: {e}")
+
+
+@app.get("/api/documents/{doc_id}/flashcards")
+async def get_flashcards(doc_id: str):
+    if doc_id not in documents_store:
+        raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
+    flashcards = documents_store[doc_id].get("flashcards")
+    if flashcards is None:
+        raise HTTPException(status_code=404, detail="Noch keine Karteikarten generiert")
+    return {"flashcards": flashcards}
+
+
+@app.post("/api/generate/quiz/{doc_id}")
+async def generate_quiz(doc_id: str):
+    if not azure_openai_configured():
+        raise HTTPException(status_code=503, detail="Azure OpenAI nicht konfiguriert.")
+    if doc_id not in documents_store:
+        raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
+
+    content = documents_store[doc_id]["markdown"][:MAX_CONTENT_LENGTH]
+    try:
+        raw = await _call_azure_openai(
+            QUIZ_SYSTEM_PROMPT,
+            "Erstelle 5 Multiple-Choice-Fragen aus diesem Vorlesungsinhalt:\n\n" + content,
+        )
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = re.sub(r"^```[a-z]*\n?", "", raw)
+            raw = re.sub(r"\n?```$", "", raw)
+        data = json.loads(raw)
+        questions = data.get("questions", data) if isinstance(data, dict) else data
+        documents_store[doc_id]["quiz"] = questions
+        return {"questions": questions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Quiz-Generierung fehlgeschlagen: {e}")
+
+
+@app.get("/api/documents/{doc_id}/quiz")
+async def get_quiz(doc_id: str):
+    if doc_id not in documents_store:
+        raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
+    questions = documents_store[doc_id].get("quiz")
+    if questions is None:
+        raise HTTPException(status_code=404, detail="Noch kein Quiz generiert")
+    return {"questions": questions}
 
 
 # ---------------------------------------------------------------------------
@@ -448,38 +564,15 @@ async def generate_notes(doc_id: str):
     try:
         source_filename = documents_store[doc_id]["filename"]
         notes_filename = _build_notes_filename(source_filename)
-        url = (
-            f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/"
-            f"{AZURE_OPENAI_DEPLOYMENT}/chat/completions"
-            f"?api-version={AZURE_OPENAI_API_VERSION}"
+        notes_markdown = await _call_azure_openai(
+            STUDY_NOTES_SYSTEM_PROMPT,
+            (
+                "Erstelle einen didaktisch aufbereiteten Lernzettel aus dem fachlich "
+                "relevanten Inhalt dieser Vorlesung. Formeln muessen in LaTeX mit "
+                "$...$ oder $$...$$ geschrieben werden.\n\n"
+                "Vorlesungsinhalt:\n\n" + content
+            ),
         )
-        payload = {
-            "messages": [
-                {"role": "system", "content": STUDY_NOTES_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        "Erstelle einen didaktisch aufbereiteten Lernzettel aus dem fachlich "
-                        "relevanten Inhalt dieser Vorlesung. Formeln muessen in LaTeX mit "
-                        "$...$ oder $$...$$ geschrieben werden.\n\n"
-                        "Vorlesungsinhalt:\n\n" + content
-                    ),
-                },
-            ],
-            "temperature": 0.5,
-            "max_tokens": 2500,
-        }
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                url,
-                headers={"api-key": AZURE_OPENAI_API_KEY},
-                json=payload,
-                timeout=60.0,
-            )
-            response.raise_for_status()
-
-        notes_markdown = response.json()["choices"][0]["message"]["content"]
         pdf_bytes = markdown_to_latex_and_pdf(notes_markdown, source_filename)
 
         pdf_path = os.path.join(UPLOAD_DIR, f"{doc_id}_{notes_filename}")

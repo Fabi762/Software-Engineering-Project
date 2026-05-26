@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { I } from './icons'
 import { enrichDoc } from './Library'
+import Flashcards from './Flashcards'
 
 // ============================================================
 //  Overview tab
@@ -145,33 +146,123 @@ function NotesTab({ doc, onGenerate, isGenerating }) {
 }
 
 // ============================================================
-//  Flashcards tab (Placeholder — API kommt in Milestone 4)
+//  Flashcards tab
 // ============================================================
-function FlashcardsTab() {
+function FlashcardsTab({ doc, onGenerate, isGenerating }) {
   return (
-    <div className="tab-pending fade-in">
-      <I.Cards size={40} stroke={1.2} />
-      <h3>Karteikarten</h3>
-      <p>
-        Karteikarten werden in Milestone 4 verfügbar sein. Das Backend-Endpoint
-        <span className="mono" style={{ fontSize: 12, margin: '0 4px' }}>/api/generate/flashcards/{'{id}'}</span>
-        wird dann automatisch Karten aus dem Vorlesungsinhalt erstellen.
-      </p>
+    <div className="fade-in">
+      <Flashcards
+        flashcards={doc.flashcards || null}
+        onGenerate={onGenerate}
+        isGenerating={isGenerating}
+      />
     </div>
   )
 }
 
 // ============================================================
-//  Quiz tab (Placeholder — API kommt in Milestone 4)
+//  Quiz tab
 // ============================================================
-function QuizTab() {
+function QuizTab({ doc, onGenerate, isGenerating }) {
+  const [selected, setSelected] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+
+  const questions = doc.quiz || null
+
+  if (!questions && !isGenerating) {
+    return (
+      <div className="generate-prompt fade-in">
+        <div className="generate-icon">
+          <I.Quiz size={40} stroke={1.2} />
+        </div>
+        <h3>Quiz generieren</h3>
+        <p>Die KI erstellt Multiple-Choice-Fragen aus dem Vorlesungsinhalt, damit du dein Wissen testen kannst.</p>
+        <button className="btn-generate" onClick={onGenerate}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          Quiz erstellen
+        </button>
+      </div>
+    )
+  }
+
+  if (isGenerating) {
+    return (
+      <div className="generating fade-in">
+        <div className="loading-spinner large" />
+        <h3>Quiz wird erstellt...</h3>
+        <p>Die KI formuliert Multiple-Choice-Fragen</p>
+      </div>
+    )
+  }
+
+  const score = submitted
+    ? questions.filter((q, i) => selected[i] === q.correct).length
+    : null
+
+  const reset = () => { setSelected({}); setSubmitted(false) }
+
   return (
-    <div className="tab-pending fade-in">
-      <I.Quiz size={40} stroke={1.2} />
-      <h3>Quiz</h3>
-      <p>
-        Der Wissens-Check mit Multiple-Choice-Fragen wird in Milestone 4 freigeschaltet.
-      </p>
+    <div className="quiz-container fade-in">
+      {submitted && (
+        <div className="quiz-result">
+          <span className="quiz-score">{score} / {questions.length}</span>
+          <span className="quiz-score-label">richtige Antworten</span>
+          <button className="btn btn-ghost btn-sm" onClick={reset}>Nochmal versuchen</button>
+        </div>
+      )}
+
+      {questions.map((q, qi) => {
+        const answered = submitted
+        const correct = q.correct
+        return (
+          <div key={qi} className={`quiz-question ${answered ? 'answered' : ''}`}>
+            <p className="quiz-q-text"><strong>{qi + 1}.</strong> {q.question}</p>
+            <div className="quiz-options">
+              {q.options.map((opt, oi) => {
+                let cls = 'quiz-option'
+                if (answered) {
+                  if (oi === correct) cls += ' correct'
+                  else if (oi === selected[qi] && selected[qi] !== correct) cls += ' wrong'
+                } else if (selected[qi] === oi) {
+                  cls += ' selected'
+                }
+                return (
+                  <button
+                    key={oi}
+                    className={cls}
+                    disabled={answered}
+                    onClick={() => setSelected(s => ({ ...s, [qi]: oi }))}
+                  >
+                    <span className="quiz-option-letter">{String.fromCharCode(65 + oi)}</span>
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+            {answered && q.explanation && (
+              <p className="quiz-explanation">{q.explanation}</p>
+            )}
+          </div>
+        )
+      })}
+
+      {!submitted && (
+        <button
+          className="btn btn-accent btn-lg"
+          disabled={Object.keys(selected).length < questions.length}
+          onClick={() => setSubmitted(true)}
+        >
+          Auswerten
+        </button>
+      )}
+
+      {submitted && (
+        <button className="btn btn-ghost btn-sm" onClick={onGenerate}>
+          <I.Refresh size={13} /> Neues Quiz
+        </button>
+      )}
     </div>
   )
 }
@@ -179,15 +270,25 @@ function QuizTab() {
 // ============================================================
 //  Lecture page shell
 // ============================================================
-function Lecture({ doc, onBack, onDelete, onGenerateNotes, isGeneratingNotes }) {
+function Lecture({
+  doc,
+  onBack,
+  onDelete,
+  onGenerateNotes,
+  isGeneratingNotes,
+  onGenerateFlashcards,
+  isGeneratingFlashcards,
+  onGenerateQuiz,
+  isGeneratingQuiz,
+}) {
   const [tab, setTab] = useState('notes')
   const l = enrichDoc(doc)
 
   const tabs = [
-    { id: 'overview', label: 'Übersicht', icon: null },
+    { id: 'overview', label: 'Übersicht' },
     { id: 'notes',    label: 'Lernzettel', dot: l.notesReady },
-    { id: 'cards',    label: 'Karteikarten', badge: null },
-    { id: 'quiz',     label: 'Quiz', badge: null },
+    { id: 'cards',    label: 'Karteikarten', dot: !!doc.flashcards },
+    { id: 'quiz',     label: 'Quiz', dot: !!doc.quiz },
   ]
 
   return (
@@ -225,8 +326,7 @@ function Lecture({ doc, onBack, onDelete, onGenerateNotes, isGeneratingNotes }) 
             onClick={() => setTab(t.id)}
           >
             <span>{t.label}</span>
-            {t.badge && <span className="tab-badge">{t.badge}</span>}
-            {t.dot  && <span className="dot-ok" />}
+            {t.dot && <span className="dot-ok" />}
           </button>
         ))}
       </nav>
@@ -239,8 +339,20 @@ function Lecture({ doc, onBack, onDelete, onGenerateNotes, isGeneratingNotes }) 
           isGenerating={isGeneratingNotes}
         />
       )}
-      {tab === 'cards' && <FlashcardsTab />}
-      {tab === 'quiz'  && <QuizTab />}
+      {tab === 'cards' && (
+        <FlashcardsTab
+          doc={doc}
+          onGenerate={onGenerateFlashcards}
+          isGenerating={isGeneratingFlashcards}
+        />
+      )}
+      {tab === 'quiz' && (
+        <QuizTab
+          doc={doc}
+          onGenerate={onGenerateQuiz}
+          isGenerating={isGeneratingQuiz}
+        />
+      )}
     </div>
   )
 }

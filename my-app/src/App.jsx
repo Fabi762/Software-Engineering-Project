@@ -10,8 +10,10 @@ function App() {
   const [documents,          setDocuments]          = useState([])
   const [view,               setView]               = useState({ name: 'library', lecture: null })
   const [isUploading,        setIsUploading]        = useState(false)
-  const [isGeneratingNotes,  setIsGeneratingNotes]  = useState(false)
-  const [toast,              setToast]              = useState(null)
+  const [isGeneratingNotes,      setIsGeneratingNotes]      = useState(false)
+  const [isGeneratingFlashcards, setIsGeneratingFlashcards] = useState(false)
+  const [isGeneratingQuiz,       setIsGeneratingQuiz]       = useState(false)
+  const [toast,                  setToast]                  = useState(null)
   const [theme,              setTheme]              = useState(
     () => localStorage.getItem('sb-theme') || 'paper'
   )
@@ -106,6 +108,46 @@ function App() {
     }
   }
 
+  const handleGenerateFlashcards = async () => {
+    const doc = view.lecture
+    if (!doc) return
+    setIsGeneratingFlashcards(true)
+    try {
+      const res = await fetch(`/api/generate/flashcards/${doc.id}`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || 'Karteikarten-Generierung fehlgeschlagen')
+      }
+      const data = await res.json()
+      updateDocument({ ...doc, flashcards: data.flashcards })
+      showToast('Karteikarten erfolgreich erstellt!')
+    } catch (err) {
+      showToast(err.message, 'error')
+    } finally {
+      setIsGeneratingFlashcards(false)
+    }
+  }
+
+  const handleGenerateQuiz = async () => {
+    const doc = view.lecture
+    if (!doc) return
+    setIsGeneratingQuiz(true)
+    try {
+      const res = await fetch(`/api/generate/quiz/${doc.id}`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || 'Quiz-Generierung fehlgeschlagen')
+      }
+      const data = await res.json()
+      updateDocument({ ...doc, quiz: data.questions })
+      showToast('Quiz erfolgreich erstellt!')
+    } catch (err) {
+      showToast(err.message, 'error')
+    } finally {
+      setIsGeneratingQuiz(false)
+    }
+  }
+
   return (
     <div className="app">
       <Masthead
@@ -131,6 +173,10 @@ function App() {
             onDelete={() => handleDelete(view.lecture.id)}
             onGenerateNotes={handleGenerateNotes}
             isGeneratingNotes={isGeneratingNotes}
+            onGenerateFlashcards={handleGenerateFlashcards}
+            isGeneratingFlashcards={isGeneratingFlashcards}
+            onGenerateQuiz={handleGenerateQuiz}
+            isGeneratingQuiz={isGeneratingQuiz}
           />
         )}
         {view.name === 'upload' && (
