@@ -53,7 +53,7 @@ initexmf --set-config-value [MPM]AutoInstall=1
 ```
 Das sorgt dafuer, dass fehlende LaTeX-Pakete automatisch nachgeladen werden.
 
-> **Hinweis:** Beim ersten Lernzettel-Download laedt MiKTeX einige Pakete herunter (~2 Min.). Danach geht es sofort.
+> **Hinweis:** Beim ersten Lernzettel-Download lädt MiKTeX einige Pakete herunter (~2 Min.). Danach geht es sofort.
 
 ---
 
@@ -83,7 +83,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-Abhaengigkeiten installieren:
+Abhängigkeiten installieren:
 ```bash
 pip install -r requirements.txt
 ```
@@ -149,11 +149,11 @@ Dann Browser oeffnen: **http://localhost:5173**
 
 ---
 
-## Haeufige Probleme
+## Häufige Probleme
 
 | Problem | Loesung |
 | ------- | ------- |
 | `uvicorn: command not found` | Virtuelle Umgebung aktivieren: `venv\Scripts\activate` |
 | `Azure OpenAI nicht konfiguriert` | `.env`-Datei im `backend/`-Ordner pruefen |
-| Lernzettel-Generierung schlaegt fehl | Beim ersten Mal laedt MiKTeX Pakete – kurz warten und nochmal versuchen |
+| Lernzettel-Generierung schlägt fehl | Beim ersten Mal lädt MiKTeX Pakete – kurz warten und nochmal versuchen |
 | Port 8000 bereits belegt | Anderen Prozess beenden oder Backend auf anderem Port starten |
