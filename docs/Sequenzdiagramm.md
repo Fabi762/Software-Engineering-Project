@@ -1,9 +1,18 @@
 ```mermaid
-sequenceDiagram
-  actor User
-  User->>Frontend: Datei hochladen
-  Frontend->>Backend: POST /api/upload
-  Backend->>Backend: PDF parsen
-  Backend-->>Frontend: {id, filename, markdown}
-  Frontend-->>User: Toast "Erfolgreich verarbeitet"
+flowchart LR
+  U(("👤\nNutzer"))
+
+  subgraph System ["  CoolSchoolTool  "]
+    A([Kurs erstellen])
+    B([Vorlesung hochladen])
+    C([Lernzettel generieren])
+    D([Karteikarten erstellen])
+    E([Quiz durchführen])
+  end
+
+  U --> A
+  U --> B
+  U --> C
+  U --> D
+  U --> E
 ```
