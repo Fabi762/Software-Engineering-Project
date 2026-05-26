@@ -18,6 +18,100 @@
 }
 
 /* ============================================================
+   Course Select screen
+   ============================================================ */
+.course-select { padding: 48px 0 80px; }
+.course-select-head { margin-bottom: 36px; }
+.course-select-title { font-size: 32px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; margin: 0 0 6px; }
+.course-select-sub   { font-size: 15px; color: var(--ink-2); margin: 0; }
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.course-card {
+  position: relative;
+  display: flex;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 160ms, border-color 160ms, transform 120ms;
+  min-height: 140px;
+}
+.course-card:hover { box-shadow: var(--shadow-card); border-color: var(--ink-3); transform: translateY(-1px); }
+
+.course-card-color { width: 6px; flex-shrink: 0; }
+.course-card-body  { flex: 1; padding: 20px 16px 20px 18px; display: flex; flex-direction: column; gap: 4px; }
+.course-card-semester { font-size: 11px; color: var(--ink-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.course-card-name     { font-size: 16px; font-weight: 600; color: var(--ink); margin: 0; line-height: 1.3; }
+.course-card-meta     { font-size: 12px; color: var(--ink-3); margin-top: auto; padding-top: 12px; }
+
+.course-card-delete {
+  position: absolute; top: 10px; right: 10px;
+  opacity: 0; transition: opacity 160ms;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 4px; padding: 4px 6px; color: var(--ink-3); cursor: pointer;
+}
+.course-card:hover .course-card-delete { opacity: 1; }
+.course-card-delete:hover { color: var(--error); border-color: var(--error); }
+
+.course-card--new {
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; color: var(--ink-3); border-style: dashed; border: 1.5px dashed var(--line);
+  background: transparent; font-size: 14px; font-weight: 500;
+  transition: all 160ms;
+}
+.course-card--new:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+.course-card--form {
+  flex-direction: column; gap: 12px;
+  padding: 20px; align-items: stretch; cursor: default;
+}
+.course-card--form:hover { transform: none; box-shadow: var(--shadow-card); }
+
+.course-form-colors { display: flex; gap: 6px; flex-wrap: wrap; }
+.color-dot {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: transform 120ms;
+}
+.color-dot.active { border-color: var(--ink); transform: scale(1.15); }
+.color-dot:hover  { transform: scale(1.1); }
+
+.course-form-input,
+.course-form-select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--bg); color: var(--ink);
+  font-size: 13px; outline: none;
+}
+.course-form-input:focus,
+.course-form-select:focus { border-color: var(--accent); }
+.course-form-select { cursor: pointer; }
+
+.course-form-actions { display: flex; gap: 8px; }
+
+/* Library course dot */
+.course-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; flex-shrink: 0;
+}
+
+/* Masthead course chip */
+.masthead-sep { color: var(--ink-3); font-size: 16px; margin: 0 4px; }
+.masthead-course-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border: 1px solid var(--line);
+  border-radius: 999px; font-size: 13px; font-weight: 500;
+  color: var(--ink); background: var(--panel); cursor: pointer;
+  transition: all 140ms; white-space: nowrap;
+}
+.masthead-course-chip:hover { border-color: var(--ink-3); background: var(--panel-2); }
+.masthead-course-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ============================================================
    Masthead
    ============================================================ */
 .masthead {

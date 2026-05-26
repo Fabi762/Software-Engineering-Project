@@ -37,29 +37,6 @@ export function enrichDoc(doc) {
   }
 }
 
-function StatStrip({ documents }) {
-  const notesCount = documents.filter(d => d.notesPdf).length
-  return (
-    <div className="stats-strip">
-      <div className="stat">
-        <div className="stat-label">Vorlesungen</div>
-        <div className="stat-value">{documents.length}<span className="stat-unit">gesamt</span></div>
-      </div>
-      <div className="stat">
-        <div className="stat-label">Lernzettel</div>
-        <div className="stat-value">{notesCount}<span className="stat-unit">PDF</span></div>
-      </div>
-      <div className="stat">
-        <div className="stat-label">Karteikarten</div>
-        <div className="stat-value">0<span className="stat-unit">Karten</span></div>
-      </div>
-      <div className="stat">
-        <div className="stat-label">Hochgeladen</div>
-        <div className="stat-value">{documents.length}<span className="stat-unit">Dateien</span></div>
-      </div>
-    </div>
-  )
-}
 
 function LectureCard({ doc, onOpen }) {
   const l = enrichDoc(doc)
@@ -83,7 +60,7 @@ function LectureCard({ doc, onOpen }) {
   )
 }
 
-function Library({ documents, onOpen, onUpload }) {
+function Library({ documents, course, onOpen, onUpload }) {
   const [filter, setFilter] = useState('all')
 
   const filtered = useMemo(() => {
@@ -97,11 +74,16 @@ function Library({ documents, onOpen, onUpload }) {
     <div className="fade-in">
       <header className="page-head">
         <div className="page-head-left">
-          <div className="page-eyebrow">Sommersemester 2026</div>
-          <h1 className="page-title" style={{ fontFamily: '"IBM Plex Mono"' }}>Bibliothek</h1>
-          <p className="page-sub">
-            Deine Vorlesungen, Lernzettel und Karteikarten an einem Ort.
-          </p>
+          <div className="page-eyebrow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {course && (
+              <span
+                className="course-dot"
+                style={{ background: course.color }}
+              />
+            )}
+            {course?.semester ?? ''}
+          </div>
+          <h1 className="page-title">{course?.name ?? 'Bibliothek'}</h1>
         </div>
         <div className="page-head-right">
           <button className="btn btn-accent btn-lg" onClick={onUpload}>
@@ -109,8 +91,6 @@ function Library({ documents, onOpen, onUpload }) {
           </button>
         </div>
       </header>
-
-      <StatStrip documents={documents} />
 
       <div className="lib-toolbar">
         <h2 className="lib-toolbar-title">
