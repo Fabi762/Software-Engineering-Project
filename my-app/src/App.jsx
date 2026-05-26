@@ -108,12 +108,12 @@ function App() {
     }
   }
 
-  const handleGenerateFlashcards = async () => {
+  const handleGenerateFlashcards = async (count = 10) => {
     const doc = view.lecture
     if (!doc) return
     setIsGeneratingFlashcards(true)
     try {
-      const res = await fetch(`/api/generate/flashcards/${doc.id}`, { method: 'POST' })
+      const res = await fetch(`/api/generate/flashcards/${doc.id}?count=${count}`, { method: 'POST' })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.detail || 'Karteikarten-Generierung fehlgeschlagen')

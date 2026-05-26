@@ -3,6 +3,7 @@ import { useState } from 'react'
 function Flashcards({ flashcards, onGenerate, isGenerating }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
+  const [count, setCount] = useState(10)
 
   if (!flashcards && !isGenerating) {
     return (
@@ -19,7 +20,32 @@ function Flashcards({ flashcards, onGenerate, isGenerating }) {
           Die KI erstellt automatisch Frage-Antwort-Karten aus dem Vorlesungsinhalt,
           damit du dein Wissen testen kannst.
         </p>
-        <button className="btn-generate" onClick={onGenerate}>
+        <div className="fc-count-row">
+          <label className="fc-count-label" htmlFor="fc-count">Anzahl Karten</label>
+          <div className="fc-count-control">
+            <button
+              className="fc-count-btn"
+              onClick={() => setCount(c => Math.max(1, c - 1))}
+              disabled={count <= 1}
+            >−</button>
+            <input
+              id="fc-count"
+              type="number"
+              className="fc-count-input"
+              min={1}
+              max={40}
+              value={count}
+              onChange={e => setCount(Math.min(40, Math.max(1, Number(e.target.value) || 1)))}
+            />
+            <button
+              className="fc-count-btn"
+              onClick={() => setCount(c => Math.min(40, c + 1))}
+              disabled={count >= 40}
+            >+</button>
+          </div>
+          <span className="fc-count-hint">max. 40</span>
+        </div>
+        <button className="btn-generate" onClick={() => onGenerate(count)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
           </svg>

@@ -193,17 +193,19 @@ async def _call_azure_openai(system_prompt: str, user_message: str) -> str:
 
 
 @app.post("/api/generate/flashcards/{doc_id}")
-async def generate_flashcards(doc_id: str):
+async def generate_flashcards(doc_id: str, count: int = 10):
+    count = max(1, min(40, count))
     if not azure_openai_configured():
         raise HTTPException(status_code=503, detail="Azure OpenAI nicht konfiguriert.")
     if doc_id not in documents_store:
         raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
 
     content = documents_store[doc_id]["markdown"][:MAX_CONTENT_LENGTH]
+    prompt = FLASHCARDS_SYSTEM_PROMPT.replace("genau 10 Karteikarten", f"genau {count} Karteikarten")
     try:
         raw = await _call_azure_openai(
-            FLASHCARDS_SYSTEM_PROMPT,
-            "Erstelle 10 Karteikarten aus diesem Vorlesungsinhalt:\n\n" + content,
+            prompt,
+            f"Erstelle {count} Karteikarten aus diesem Vorlesungsinhalt:\n\n" + content,
         )
         raw = raw.strip()
         if raw.startswith("```"):
