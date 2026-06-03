@@ -1,0 +1,104 @@
+@startuml UseCaseDiagramm
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor WhiteSmoke
+  BorderColor DarkSlateGray
+  ArrowColor DarkSlateGray
+}
+skinparam actor {
+  BackgroundColor LightBlue
+}
+
+actor "Nutzer" as N
+actor "Azure OpenAI" as KI
+
+rectangle "CoolSchoolTool" {
+
+  package "Kursverwaltung" {
+    usecase "Kurs erstellen"          as UC1
+    usecase "Kursname festlegen"      as UC1a
+    usecase "Semester wählen"         as UC1b
+    usecase "Kursfarbe wählen"        as UC1c
+    usecase "Kurs auswählen"          as UC2
+    usecase "Kurs löschen"            as UC3
+  }
+
+  package "Dokumentenverwaltung" {
+    usecase "Vorlesung hochladen"     as UC4
+    usecase "PDF einlesen"            as UC4a
+    usecase "Text extrahieren"        as UC4b
+    usecase "Vorlesung ansehen"       as UC5
+    usecase "Vorlesung löschen"       as UC6
+  }
+
+  package "Lernzettel" {
+    usecase "Lernzettel generieren"   as UC7
+    usecase "KI-Anfrage stellen"      as UC8
+    usecase "LaTeX-PDF erstellen"     as UC9
+    usecase "Lernzettel herunterladen" as UC10
+    usecase "Lernzettel neu generieren" as UC11
+  }
+
+  package "Karteikarten" {
+    usecase "Karteikarten generieren" as UC12
+    usecase "Anzahl festlegen (1-40)" as UC12a
+    usecase "Karte umdrehen"          as UC13
+    usecase "Karte navigieren"        as UC14
+    usecase "Fortschritt verfolgen"   as UC15
+  }
+
+  package "Quiz" {
+    usecase "Quiz generieren"         as UC16
+    usecase "Frage beantworten"       as UC17
+    usecase "Ergebnis auswerten"      as UC18
+    usecase "Erklärung lesen"         as UC19
+    usecase "Quiz wiederholen"        as UC20
+  }
+
+  package "Einstellungen" {
+    usecase "Dark Mode aktivieren"    as UC21
+    usecase "Light Mode aktivieren"   as UC22
+  }
+}
+
+N --> UC1
+UC1 ..> UC1a : <<include>>
+UC1 ..> UC1b : <<include>>
+UC1 ..> UC1c : <<include>>
+N --> UC2
+N --> UC3
+
+N --> UC4
+UC4 ..> UC4a : <<include>>
+UC4a ..> UC4b : <<include>>
+N --> UC5
+N --> UC6
+
+N --> UC7
+UC7 ..> UC8  : <<include>>
+UC7 ..> UC9  : <<include>>
+UC9 ..> UC10 : <<include>>
+UC11 ..> UC7 : <<extend>>
+N --> UC10
+N --> UC11
+
+N --> UC12
+UC12 ..> UC12a : <<extend>>
+UC12 ..> UC8   : <<include>>
+N --> UC13
+N --> UC14
+N --> UC15
+
+N --> UC16
+UC16 ..> UC8  : <<include>>
+N --> UC17
+UC17 ..> UC18 : <<include>>
+UC18 ..> UC19 : <<extend>>
+N --> UC20
+
+N --> UC21
+N --> UC22
+
+KI --> UC8
+@enduml

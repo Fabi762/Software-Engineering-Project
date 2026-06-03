@@ -1,0 +1,73 @@
+@startuml Aktivitaetsdiagramm_UC01_Upload
+skinparam activity {
+  BackgroundColor WhiteSmoke
+  BorderColor DarkSlateGray
+  ArrowColor DarkSlateGray
+  StartColor DarkSlateGray
+  EndColor DarkSlateGray
+  DiamondBackgroundColor LightYellow
+  DiamondBorderColor DarkSlateGray
+}
+skinparam swimlane {
+  BorderColor DarkSlateGray
+  TitleBackgroundColor LightSteelBlue
+}
+
+|Nutzer|
+start
+:Klickt auf "Neu" im Header;
+
+|Frontend (React)|
+:Upload-Ansicht öffnen\n(Upload.jsx);
+:Datei per Klick oder\nDrag & Drop auswählen;
+
+|Nutzer|
+:Datei auswählen;
+
+|Frontend (React)|
+if (Dateiformat unterstützt?) then (nein)
+  :Fehlermeldung anzeigen\n"Ungültiges Format";
+  stop
+endif
+if (Dateigröße > 50 MB?) then (ja)
+  :Toast: "Datei zu groß\n(max. 50 MB)";
+  stop
+endif
+:Klickt auf "Hochladen";
+
+|Nutzer|
+:Klickt "Hochladen";
+
+|Frontend (React)|
+:Ladeanimation anzeigen;
+:POST /api/upload (multipart);
+
+|Backend (FastAPI)|
+:UUID generieren;
+:Datei mit UUID-Prefix\nim uploads/-Verzeichnis speichern;
+if (Datei ist PDF?) then (ja)
+  :PdfReader.extract_text()\nText aus allen Seiten extrahieren;
+else (nein)
+  :open().read()\nDateiinhalt als Text lesen;
+endif
+if (Textextraktion erfolgreich?) then (nein)
+  :Hochgeladene Datei löschen;
+  :HTTP 500 zurückgeben;
+  |Frontend (React)|
+  :Toast: "Verarbeitung fehlgeschlagen";
+  stop
+endif
+:Dokument in documents_store speichern\n{id, filename, uploaded_at, markdown};
+:HTTP 200 + {id, filename,\nuploaded_at, markdown};
+
+|Frontend (React)|
+:courseId anhängen;
+:documents[]-State aktualisieren;
+:Zur Detailansicht weiterleiten;
+:Toast: "Erfolgreich verarbeitet";
+
+|Nutzer|
+:Dokument in Detailansicht sehen;
+stop
+
+@enduml

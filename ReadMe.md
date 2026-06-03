@@ -151,7 +151,7 @@ Dann Browser oeffnen: **http://localhost:5173**
 
 ## Häufige Probleme
 
-| Problem | Loesung |
+| Problem | Lösung |
 | ------- | ------- |
 | `uvicorn: command not found` | Virtuelle Umgebung aktivieren: `venv\Scripts\activate` |
 | `Azure OpenAI nicht konfiguriert` | `.env`-Datei im `backend/`-Ordner pruefen |
