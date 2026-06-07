@@ -1,0 +1,96 @@
+@startuml Aktivitaetsdiagramm_UC02_Lernzettel
+skinparam activity {
+  BackgroundColor WhiteSmoke
+  BorderColor DarkSlateGray
+  ArrowColor DarkSlateGray
+  StartColor DarkSlateGray
+  EndColor DarkSlateGray
+  DiamondBackgroundColor LightYellow
+  DiamondBorderColor DarkSlateGray
+}
+skinparam swimlane {
+  BorderColor DarkSlateGray
+  TitleBackgroundColor LightSteelBlue
+}
+
+|Nutzer|
+start
+:Öffnet Detailansicht\neines Dokuments;
+:Klickt auf Tab "Lernzettel";
+:Klickt "Lernzettel als\nPDF generieren";
+
+|Frontend (React)|
+:Ladeanimation starten;
+:POST /api/generate/notes/{doc_id};
+
+|Backend (FastAPI)|
+if (Azure OpenAI konfiguriert?) then (nein)
+  :HTTP 503: "Azure OpenAI\nnicht konfiguriert";
+  |Frontend (React)|
+  :Toast: Fehlermeldung anzeigen;
+  stop
+endif
+if (doc_id im Store?) then (nein)
+  :HTTP 404: "Dokument\nnicht gefunden";
+  |Frontend (React)|
+  :Toast: Fehlermeldung anzeigen;
+  stop
+endif
+:Markdown aus documents_store laden;
+if (Text > 6000 Zeichen?) then (ja)
+  :Text auf 6000 Zeichen kürzen\n+ "[Inhalt gekürzt...]" anhängen;
+endif
+
+|Azure OpenAI|
+:Chat-Completion-Anfrage\n(System-Prompt + Vorlesungsinhalt);
+:Strukturierten Markdown-\nLernzettel zurückgeben;
+
+|Backend (FastAPI)|
+if (API-Antwort erhalten?) then (nein)
+  :HTTP 500: "Generierung\nfehlgeschlagen";
+  |Frontend (React)|
+  :Toast: Fehlermeldung anzeigen;
+  stop
+endif
+:markdown_to_latex_and_pdf() aufrufen\n(Markdown → LaTeX-Template befüllen);
+
+|LaTeX-Compiler|
+if (LaTeX-Compiler verfügbar?) then (nein)
+  :RuntimeError: "Kein LaTeX-\nCompiler gefunden";
+  |Backend (FastAPI)|
+  :HTTP 500 zurückgeben;
+  |Frontend (React)|
+  :Toast: Fehlermeldung anzeigen;
+  stop
+endif
+:pdflatex / tectonic / xelatex\n.tex → .pdf kompilieren;
+if (Kompilierung erfolgreich?) then (nein)
+  :HTTP 500 mit LaTeX-\nFehlerlog;
+  |Frontend (React)|
+  :Toast: Fehlermeldung anzeigen;
+  stop
+endif
+:PDF-Bytes zurückgeben;
+
+|Backend (FastAPI)|
+:PDF im uploads/-Verzeichnis speichern;
+:notes_pdf_path im Store aktualisieren;
+:HTTP 200: {notes_pdf: true};
+
+|Frontend (React)|
+:GET /api/documents/{doc_id}/notes-pdf;
+
+|Backend (FastAPI)|
+:PDF als FileResponse zurückgeben;
+
+|Frontend (React)|
+:Blob-URL erstellen;
+:Automatischen Download auslösen;
+:Fortschritt in Bibliothek → 50 %;
+:Toast: "Lernzettel heruntergeladen";
+
+|Nutzer|
+:PDF-Datei wurde heruntergeladen;
+stop
+
+@enduml

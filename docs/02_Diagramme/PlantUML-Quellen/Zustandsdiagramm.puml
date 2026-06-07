@@ -1,0 +1,53 @@
+@startuml Zustandsdiagramm_Dokument
+skinparam state {
+  BackgroundColor WhiteSmoke
+  BorderColor DarkSlateGray
+  ArrowColor DarkSlateGray
+  StartColor DarkSlateGray
+  EndColor DarkSlateGray
+}
+
+[*] --> Hochgeladen : POST /api/upload\n(Datei gespeichert,\nText extrahiert)
+
+Hochgeladen --> TextExtrahiert : Textextraktion\nerfolgreich
+
+TextExtrahiert --> LernzettelGeneriert : POST /api/generate/notes/{id}\n[Azure OpenAI + LaTeX erfolgreich]
+
+TextExtrahiert --> KarteikartGeniert : POST /api/generate/flashcards/{id}\n[Azure OpenAI erfolgreich]
+
+LernzettelGeneriert --> KarteikartGeniert : POST /api/generate/flashcards/{id}
+
+KarteikartGeniert --> QuizGeneriert : POST /api/generate/quiz/{id}\n[Azure OpenAI erfolgreich]
+
+LernzettelGeneriert --> QuizGeneriert : POST /api/generate/quiz/{id}
+
+state LernzettelGeneriert {
+  [*] --> PDFGespeichert
+  PDFGespeichert --> PDFNeuGeneriert : Nutzer klickt\n"Neu generieren"
+  PDFNeuGeneriert --> PDFGespeichert
+}
+
+Hochgeladen --> [*] : DELETE /api/documents/{id}\n(Datei + Store-Eintrag gelöscht)
+TextExtrahiert --> [*] : DELETE /api/documents/{id}
+LernzettelGeneriert --> [*] : DELETE /api/documents/{id}\n(auch PDF-Datei gelöscht)
+KarteikartGeniert --> [*] : DELETE /api/documents/{id}
+QuizGeneriert --> [*] : DELETE /api/documents/{id}
+
+note right of TextExtrahiert
+  Dokument liegt als Markdown
+  im In-Memory-Store vor.
+  Noch kein Lernmaterial generiert.
+end note
+
+note right of LernzettelGeneriert
+  notes_pdf_path ist gesetzt.
+  PDF liegt im uploads/-Verzeichnis.
+end note
+
+note right of QuizGeneriert
+  Vollständig verarbeitetes Dokument:
+  Lernzettel + Karteikarten + Quiz
+  alle optional unabhängig voneinander.
+end note
+
+@enduml

@@ -1,0 +1,175 @@
+@startuml Klassendiagramm
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor WhiteSmoke
+  BorderColor DarkSlateGray
+  ArrowColor DarkSlateGray
+  HeaderBackgroundColor LightSteelBlue
+}
+
+package "Frontend (React)" {
+
+  class App {
+    - courses: Course[]
+    - currentCourse: Course
+    - documents: Document[]
+    - view: string
+    - theme: string
+    --
+    + handleSelectCourse(course)
+    + handleCreateCourse(data)
+    + handleDeleteCourse(id)
+    + handleUpload(file)
+    + handleDelete(id)
+    + handleGenerateNotes()
+    + handleGenerateFlashcards(count)
+    + handleGenerateQuiz()
+  }
+
+  class CourseSelect {
+    - creating: boolean
+    - name: string
+    - semester: string
+    - color: string
+    --
+    + handleCreate()
+    + render()
+  }
+
+  class Library {
+    - filter: string
+    --
+    + filtered: Document[]
+    + render()
+  }
+
+  class Lecture {
+    - tab: string
+    --
+    + render()
+  }
+
+  class Flashcards {
+    - currentIndex: number
+    - isFlipped: boolean
+    - count: number
+    --
+    + goTo(index)
+    + render()
+  }
+
+  class QuizTab {
+    - selected: Map
+    - submitted: boolean
+    --
+    + score: number
+    + reset()
+    + render()
+  }
+
+  class Upload {
+    - isDragging: boolean
+    - file: File
+    --
+    + handleDrop(e)
+    + handleSubmit()
+    + render()
+  }
+
+  class Masthead {
+    + render()
+  }
+
+  class Toast {
+    + text: string
+    + kind: string
+    + render()
+  }
+}
+
+package "Datenmodelle" {
+  class Course {
+    + id: string
+    + name: string
+    + semester: string
+    + color: string
+    + docCount: number
+  }
+
+  class Document {
+    + id: string
+    + filename: string
+    + uploaded_at: string
+    + markdown: string
+    + courseId: string
+    + notesPdf: boolean
+    + flashcards: Flashcard[]
+    + quiz: Question[]
+  }
+
+  class Flashcard {
+    + question: string
+    + answer: string
+  }
+
+  class Question {
+    + question: string
+    + options: string[]
+    + correct: number
+    + explanation: string
+  }
+}
+
+package "Backend (FastAPI)" {
+  class StudyBuddyAPI {
+    - documents_store: dict
+    - UPLOAD_DIR: string
+    - MAX_CONTENT_LENGTH: int
+    --
+    + health_check()
+    + upload_document(file)
+    + list_documents()
+    + get_document(doc_id)
+    + delete_document(doc_id)
+    + generate_notes(doc_id)
+    + generate_flashcards(doc_id, count)
+    + get_flashcards(doc_id)
+    + generate_quiz(doc_id)
+    + get_quiz(doc_id)
+    + download_notes_pdf(doc_id)
+  }
+
+  class AzureOpenAIClient {
+    - endpoint: string
+    - api_key: string
+    - deployment: string
+    - api_version: string
+    --
+    + call(system_prompt, user_message): string
+  }
+
+  class PDFGenerator {
+    + markdown_to_latex_and_pdf(md, filename): bytes
+    - md_to_tex(md): string
+    - escape_latex(s): string
+  }
+}
+
+App "1" *-- "n" CourseSelect
+App "1" *-- "1" Library
+App "1" *-- "1" Lecture
+App "1" *-- "1" Upload
+App "1" *-- "1" Masthead
+App "1" *-- "1" Toast
+Lecture "1" *-- "1" Flashcards
+Lecture "1" *-- "1" QuizTab
+
+App "1" o-- "n" Course
+App "1" o-- "n" Document
+Document "1" o-- "n" Flashcard
+Document "1" o-- "n" Question
+
+StudyBuddyAPI --> AzureOpenAIClient : nutzt
+StudyBuddyAPI --> PDFGenerator : nutzt
+StudyBuddyAPI "1" o-- "n" Document
+@enduml

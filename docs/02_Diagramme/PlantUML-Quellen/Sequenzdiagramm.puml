@@ -1,0 +1,73 @@
+@startuml Sequenzdiagramm
+skinparam sequence {
+  ArrowColor DarkSlateGray
+  ActorBorderColor DarkSlateGray
+  LifeLineBorderColor DarkSlateGray
+  ParticipantBackgroundColor WhiteSmoke
+  ParticipantBorderColor DarkSlateGray
+}
+
+actor "Nutzer" as N
+participant "React\n(App.jsx)" as FE
+participant "FastAPI\n(main.py)" as BE
+participant "Azure OpenAI" as KI
+participant "LaTeX\n(pdflatex)" as LT
+database "documents_store\n(In-Memory)" as DB
+
+== Datei hochladen ==
+N -> FE : Datei auswählen & hochladen
+FE -> BE : POST /api/upload (multipart)
+BE -> BE : UUID generieren\nDatei speichern
+alt PDF-Datei
+  BE -> BE : PdfReader.extract_text()
+else Text-Datei
+  BE -> BE : open().read()
+end
+BE -> DB : Dokument speichern\n{id, filename, markdown}
+BE --> FE : {id, filename, uploaded_at, markdown}
+FE -> FE : courseId anhängen\ndocuments[] aktualisieren
+FE --> N : Toast "Erfolgreich verarbeitet"
+
+== Lernzettel generieren ==
+N -> FE : "Lernzettel als PDF generieren"
+FE -> BE : POST /api/generate/notes/{doc_id}
+BE -> DB : markdown abrufen
+BE -> BE : Inhalt kürzen (max 6000 Zeichen)
+BE -> KI : Chat Completion\n(System-Prompt + Vorlesungsinhalt)
+KI --> BE : Markdown-Lernzettel
+BE -> BE : markdown_to_latex_and_pdf()
+BE -> LT : pdflatex / tectonic kompilieren
+LT --> BE : PDF-Bytes
+BE -> DB : notes_pdf_path speichern
+BE --> FE : {notes_pdf: true}
+FE -> BE : GET /api/documents/{doc_id}/notes-pdf
+BE --> FE : PDF (FileResponse)
+FE -> FE : Blob-URL erzeugen\nauto-download auslösen
+FE --> N : PDF heruntergeladen\n+ Toast anzeigen
+
+== Karteikarten generieren ==
+N -> FE : Anzahl wählen (1-40)\n"Karteikarten erstellen"
+FE -> BE : POST /api/generate/flashcards/{doc_id}?count=N
+BE -> DB : markdown abrufen
+BE -> KI : Chat Completion\n(count Karten als JSON)
+KI --> BE : {flashcards: [{question, answer}]}
+BE -> BE : JSON parsen & validieren
+BE -> DB : flashcards speichern
+BE --> FE : {flashcards: [...]}
+FE -> FE : updateDocument()\nFlashcards-State setzen
+FE --> N : Karteikarten anzeigen\nFlip-Animation aktiv
+
+== Quiz generieren & auswerten ==
+N -> FE : "Quiz erstellen"
+FE -> BE : POST /api/generate/quiz/{doc_id}
+BE -> KI : Chat Completion\n(5 Multiple-Choice-Fragen)
+KI --> BE : {questions: [{question, options, correct, explanation}]}
+BE -> DB : quiz speichern
+BE --> FE : {questions: [...]}
+FE --> N : Quiz anzeigen
+
+N -> FE : Alle Fragen beantworten\n"Auswerten"
+FE -> FE : score berechnen\nrichtige Antworten markieren
+FE --> N : Ergebnis (X/5)\n+ Erklärungen einblenden
+
+@enduml
