@@ -135,7 +135,7 @@ cd my-app
 npm run dev
 ```
 
-Dann Browser oeffnen: **http://localhost:5173**
+Dann Browser öffnen: **http://localhost:5173**
 
 ---
 
