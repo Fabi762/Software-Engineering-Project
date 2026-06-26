@@ -1,6 +1,6 @@
-# StudyBuddy - KI-gestuetzter Lernassistent
+# Cool-School-tool - KI-gestuetzter Lernassistent
 
-**StudyBuddy** ist eine webbasierte Anwendung fuer Studierende. Vorlesungsfolien hochladen, KI generiert daraus automatisch einen strukturierten **Lernzettel als PDF**.
+**Cool-School-tool** ist eine webbasierte Anwendung fuer Studierende. Vorlesungsfolien hochladen, KI generiert daraus automatisch einen strukturierten **Lernzettel als PDF**.
 
 Unterstuetzte Formate: PDF, PPTX, DOCX, XLSX, HTML, Markdown, Bilder.
 
@@ -38,7 +38,7 @@ Unterstuetzte Formate: PDF, PPTX, DOCX, XLSX, HTML, Markdown, Bilder.
 
 #### Python (>= 3.10)
 Download: https://www.python.org/downloads/  
-Bei der Installation **"Add Python to PATH"** anhakeneben.
+Bei der Installation **"Add Python to PATH"** anhaken.
 
 #### Node.js (>= 18)
 Download: https://nodejs.org/
@@ -101,7 +101,7 @@ AZURE_OPENAI_API_VERSION=2024-08-01-preview
 AZURE_OPENAI_DEPLOYMENT=gpt-4.1
 ```
 
-> Die Zugangsdaten bekommst du von Leon oder Mario.  
+> Die Zugangsdaten bekommen Sie du von Leon.  
 > Die `.env`-Datei niemals in Git einchecken – sie steht bereits in `.gitignore`.
 
 ---
